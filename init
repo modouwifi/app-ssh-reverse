@@ -1,0 +1,87 @@
+#!/bin/sh
+
+CURWDIR="$(cd $(dirname $0) && pwd)"
+TITLE="WPS"
+PROGRAM_NAME="app-ssh-reverse"
+CUSTOM_BIN="/system/apps/tp/bin/custom"
+CUSTOM_CONFIG_FILE="$CURWDIR/custom.conf"
+
+APPS_CONFIG_DIR="/data/conf"
+LAUNCHER_CONFIG_DIR="$APPS_CONFIG_DIR/launcher/conf.d"
+LAUNCHER_CONFIG_FILE="$LAUNCHER_CONFIG_DIR/$PROGRAM_NAME.conf"
+
+ICON="./res/icon.png"
+PRESSED_ICON="./res/icon.png"
+
+PID_FILE="$CURWDIR/$PROGRAM_NAME.pid"
+PKILL_BIN="/usr/bin/pkill"
+INSTALL_BIN="/usr/bin/install"
+REMOVE="/bin/rm -f"
+
+usage() {
+    echo "ERROR: action missing"
+    echo "syntax: $0 <start|stop|restart|status|config|install|uninstall>"
+    echo "example: $0 start"
+}
+
+start() {
+    $CUSTOM_BIN "$CUSTOM_CONFIG_FILE" &
+    [ "$!""XXX" != "XXX" ] && echo "$!" > $PID_FILE
+}
+
+stop() {
+    if [ -f $PID_FILE ]; then
+        kill  `cat "$PID_FILE"`
+        $REMOVE $PID_FILE
+    fi
+}
+
+config() {
+    echo "{" > "$PROGRAM_NAME.conf"
+    echo "\"name\" :  \"$TITLE\"," >> "$PROGRAM_NAME.conf"
+    echo "\"icon\" : \"$CURWDIR/$ICON\"," >> "$PROGRAM_NAME.conf"
+    echo "\"iconPressed\" : \"$CURWDIR/$PRESSED_ICON\"," >> "$PROGRAM_NAME.conf"
+    echo "\"exec\" : \"$CURWDIR/init start\"," >> "$PROGRAM_NAME.conf"
+    echo "\"msgNum\" : 4" >> "$PROGRAM_NAME.conf"
+    echo "}" >> "$PROGRAM_NAME.conf"
+
+    $INSTALL_BIN -d $LAUNCHER_CONFIG_DIR
+    $INSTALL_BIN "$PROGRAM_NAME.conf" "$LAUNCHER_CONFIG_FILE"
+
+    echo "{" > "$CUSTOM_CONFIG_FILE"
+    echo " \"content\" : \"点击开始，然后按照所提示文字即可远程ssh到路由器上\"," >> "$CUSTOM_CONFIG_FILE"
+    echo "  \"button1\" :   {" >> "$CUSTOM_CONFIG_FILE"
+    echo "    \"txt\" : \"开始\"," >> "$CUSTOM_CONFIG_FILE"
+    echo "    \"cmd\" : \"$CURWDIR/ssh-reverse.sh $CURWDIR/ali-ssh-reverse-id_rsa \"," >> "$CUSTOM_CONFIG_FILE"
+    echo "    \"code\" : {" >> "$CUSTOM_CONFIG_FILE"
+    echo " \"0\" : \"执行成功\" " >> "$CUSTOM_CONFIG_FILE"
+    echo "    }"  >> "$CUSTOM_CONFIG_FILE"
+    echo "  }  " >> "$CUSTOM_CONFIG_FILE"
+    echo "}   " >> "$CUSTOM_CONFIG_FILE"
+}
+
+uninstall() {
+    $REMOVE "$LAUNCHER_CONFIG_FILE"
+}
+
+# main
+if [ $# -lt 1 ]; then
+    usage
+    exit 255
+fi
+
+case "$1" in
+    "start" )
+        start;;
+    "stop" )
+        stop;;
+    "restart" )
+        start
+        stop;;
+    "install" )
+        config;;
+    "uninstall" )
+        uninstall;;
+    * )
+        usage ;;
+esac

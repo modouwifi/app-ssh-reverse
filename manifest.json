@@ -1,0 +1,14 @@
+{
+        "package_id"      : "com.modouwifi.app-wps",
+        "name"            : "反向SSH",
+        "author"          : "魔豆开发团队-阿耀",
+        "author_mail"     : "zhouyao@mochui.net",
+        "homepage"        : "www.modouwifi.com",
+        "version"         : "0.1",
+        "release_date"    : "2014.08.13",
+        "icon"            : "./res/icon.png",
+        "location"        : "external",
+        "description"     : "运行插件后，点击开始即可开启反向代理",
+        "instruction"     : "",
+        "os_version"      : "0.6.17"
+}
