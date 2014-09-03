@@ -11,7 +11,7 @@ LAUNCHER_CONFIG_DIR="$APPS_CONFIG_DIR/launcher/conf.d"
 LAUNCHER_CONFIG_FILE="$LAUNCHER_CONFIG_DIR/$PROGRAM_NAME.conf"
 
 ICON="./res/icon.png"
-PRESSED_ICON="./res/icon.png"
+PRESSED_ICON="./res/icon_pressed.png"
 
 PID_FILE="$CURWDIR/$PROGRAM_NAME.pid"
 PKILL_BIN="/usr/bin/pkill"
@@ -25,15 +25,21 @@ usage() {
 }
 
 start() {
-    $CUSTOM_BIN "$CUSTOM_CONFIG_FILE" &
-    [ "$!""XXX" != "XXX" ] && echo "$!" > $PID_FILE
+    echo "start function no implemented"
+    # $CUSTOM_BIN "$CUSTOM_CONFIG_FILE" &
+    # [ "$!""XXX" != "XXX" ] && echo "$!" > $PID_FILE
+}
+
+run() {
+    $CUSTOM_BIN "$CUSTOM_CONFIG_FILE"& 
 }
 
 stop() {
-    if [ -f $PID_FILE ]; then
-        kill  `cat "$PID_FILE"`
-        $REMOVE $PID_FILE
-    fi
+    echo "stop function not implemented"
+    # if [ -f $PID_FILE ]; then
+    #     kill  `cat "$PID_FILE"`
+    #     $REMOVE $PID_FILE
+    # fi
 }
 
 config() {
@@ -41,7 +47,7 @@ config() {
     echo "\"name\" :  \"$TITLE\"," >> "$PROGRAM_NAME.conf"
     echo "\"icon\" : \"$CURWDIR/$ICON\"," >> "$PROGRAM_NAME.conf"
     echo "\"iconPressed\" : \"$CURWDIR/$PRESSED_ICON\"," >> "$PROGRAM_NAME.conf"
-    echo "\"exec\" : \"$CURWDIR/init start\"," >> "$PROGRAM_NAME.conf"
+    echo "\"exec\" : \"$CURWDIR/init run\"," >> "$PROGRAM_NAME.conf"
     echo "\"msgNum\" : 4" >> "$PROGRAM_NAME.conf"
     echo "}" >> "$PROGRAM_NAME.conf"
 
@@ -76,6 +82,8 @@ case "$1" in
         start;;
     "stop" )
         stop;;
+    "run" )
+        run;;
     "restart" )
         start
         stop;;
