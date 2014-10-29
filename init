@@ -1,10 +1,9 @@
 #!/bin/sh
 
-CURWDIR="$(cd $(dirname $0) && pwd)"
+PWD="$(cd $(dirname $0) && pwd)"
 TITLE="远程协助"
 PROGRAM_NAME="app-ssh-reverse"
 CUSTOM_BIN="/system/apps/tp/bin/custom"
-CUSTOM_CONFIG_FILE="$CURWDIR/custom.conf"
 
 APPS_CONFIG_DIR="/data/conf"
 LAUNCHER_CONFIG_DIR="$APPS_CONFIG_DIR/launcher/conf.d"
@@ -13,10 +12,12 @@ LAUNCHER_CONFIG_FILE="$LAUNCHER_CONFIG_DIR/$PROGRAM_NAME.conf"
 ICON="./res/icon.png"
 PRESSED_ICON="./res/icon_pressed.png"
 
-PID_FILE="$CURWDIR/$PROGRAM_NAME.pid"
-PKILL_BIN="/usr/bin/pkill"
 INSTALL_BIN="/usr/bin/install"
 REMOVE="/bin/rm -f"
+
+KEY_FILE=$PWD/ali-ssh-reverse-id_rsa
+KNOWN_HOSTS=$PWD/known_hosts
+SSH=$PWD/ssh
 
 usage() {
     echo "ERROR: action missing"
@@ -24,47 +25,64 @@ usage() {
     echo "example: $0 start"
 }
 
-start() {
-    echo "start function no implemented"
-    # $CUSTOM_BIN "$CUSTOM_CONFIG_FILE" &
-    # [ "$!""XXX" != "XXX" ] && echo "$!" > $PID_FILE
+remote_exec()
+{
+    exec_result=`$SSH -i $KEY_FILE -o UserKnownHostsFile="$KNOWN_HOSTS" ssh-reverse@115.29.171.150 "$1"`    
 }
 
+get_port()
+{
+    local netstat="busy"
+    local portlist=1
+
+    while [ "$netstat" != "" -o "$portlist" != "0" ] 
+    do
+        # 可以考虑用/dev/random实现，且是1024以上即可
+        local RAN_NUM=`date +%s` 
+        local t1=`expr $RAN_NUM % 50000`
+        port_result=`expr $t1 + 1030`
+
+        remote_exec "netstat -an | grep $port"
+        netstat=$exec_result
+        remote_exec "cat port.list | grep $port | wc -l"
+        portlist=$exec_result
+    done
+}
+
+
 run() {
-    $CUSTOM_BIN "$CUSTOM_CONFIG_FILE"& 
+    # 随机取得端口
+    get_port; 
+    local port=$port_result
+    
+    echo "使用PORT:$port"
+    $SSH -i $KEY_FILE -o UserKnownHostsFile="$KNOWN_HOSTS" \
+        -g -NfR *:$port:*:22 ssh-reverse@115.29.171.150
+
+    messagebox 远程协助 "远程协助已开启,服务序号$port。
+请在结束协助后点击结束退出远程协助。" 1 结束 "killall ssh"
+
+}
+
+start() {
+    echo "not implemented"
 }
 
 stop() {
-    echo "stop function not implemented"
-    # if [ -f $PID_FILE ]; then
-    #     kill  `cat "$PID_FILE"`
-    #     $REMOVE $PID_FILE
-    # fi
+    echo "not implemented"
 }
 
 config() {
     echo "{" > "$PROGRAM_NAME.conf"
     echo "\"name\" :  \"$TITLE\"," >> "$PROGRAM_NAME.conf"
-    echo "\"icon\" : \"$CURWDIR/$ICON\"," >> "$PROGRAM_NAME.conf"
-    echo "\"iconPressed\" : \"$CURWDIR/$PRESSED_ICON\"," >> "$PROGRAM_NAME.conf"
-    echo "\"exec\" : \"$CURWDIR/init run\"," >> "$PROGRAM_NAME.conf"
+    echo "\"icon\" : \"$PWD/$ICON\"," >> "$PROGRAM_NAME.conf"
+    echo "\"iconPressed\" : \"$PWD/$PRESSED_ICON\"," >> "$PROGRAM_NAME.conf"
+    echo "\"exec\" : \"$PWD/init run\"," >> "$PROGRAM_NAME.conf"
     echo "\"msgNum\" : 4" >> "$PROGRAM_NAME.conf"
     echo "}" >> "$PROGRAM_NAME.conf"
 
     $INSTALL_BIN -d $LAUNCHER_CONFIG_DIR
     $INSTALL_BIN "$PROGRAM_NAME.conf" "$LAUNCHER_CONFIG_FILE"
-
-    echo "{" > "$CUSTOM_CONFIG_FILE"
-    echo "\"title\" : \"$TITLE\"," >> "$CUSTOM_CONFIG_FILE"
-    echo " \"content\" : \"点击开始，然后按照所提示文字即可远程ssh到路由器上\"," >> "$CUSTOM_CONFIG_FILE"
-    echo "  \"button1\" :   {" >> "$CUSTOM_CONFIG_FILE"
-    echo "    \"txt\" : \"开始\"," >> "$CUSTOM_CONFIG_FILE"
-    echo "    \"cmd\" : \"$CURWDIR/ssh-reverse.sh $CURWDIR/ali-ssh-reverse-id_rsa \"," >> "$CUSTOM_CONFIG_FILE"
-    echo "    \"code\" : {" >> "$CUSTOM_CONFIG_FILE"
-    echo " \"0\" : \"执行成功\" " >> "$CUSTOM_CONFIG_FILE"
-    echo "    }"  >> "$CUSTOM_CONFIG_FILE"
-    echo "  }  " >> "$CUSTOM_CONFIG_FILE"
-    echo "}   " >> "$CUSTOM_CONFIG_FILE"
 }
 
 uninstall() {
@@ -82,11 +100,11 @@ case "$1" in
         start;;
     "stop" )
         stop;;
-    "run" )
-        run;;
     "restart" )
         start
         stop;;
+    "run" )
+        run;;
     "install" )
         config;;
     "uninstall" )
