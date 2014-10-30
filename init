@@ -63,11 +63,11 @@ run() {
     $SSH -i $KEY_FILE -o UserKnownHostsFile="$KNOWN_HOSTS" \
         -g -NfR *:$port:*:22 ssh-reverse@115.29.171.150
 
-    # 停止转菊花
-    kill $pid
-
     messagebox 远程协助 "远程协助已开启,服务序号$port。
 请在结束协助后点击结束退出远程协助。" 1 结束 "killall ssh"
+
+    # 停止转菊花
+    kill $pid    
 }
 
 start() {
