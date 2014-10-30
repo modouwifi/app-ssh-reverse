@@ -61,7 +61,6 @@ run() {
 
     messagebox 远程协助 "远程协助已开启,服务序号$port。
 请在结束协助后点击结束退出远程协助。" 1 结束 "killall ssh"
-
 }
 
 start() {
