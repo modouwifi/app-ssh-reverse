@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# todo  : 断线重连功能未加入
+# 极客模式自动打开及极客密码的显示未处理
+
+PACKAGE_NAME="com.modouwifi.app-ssh-reverse"
 PWD="$(cd $(dirname $0) && pwd)"
 TITLE="远程协助"
 PROGRAM_NAME="app-ssh-reverse"
@@ -42,20 +46,15 @@ get_port()
         local t1=`expr $RAN_NUM % 50000`
         port_result=`expr $t1 + 1030`
 
-        remote_exec "netstat -an | grep $port"
+        remote_exec "netstat -an | grep $port_result"
         netstat=$exec_result
-        remote_exec "cat port.list | grep $port | wc -l"
+        remote_exec "cat port.list | grep $port_result | wc -l"
         portlist=$exec_result
     done
 }
 
-
-run() {
-    # 添加转菊花效果 -- 阿耀 2014-10-29
-    updateconf $PWD/loading.conf -t State -v 0
-    loadingapp $PWD/loading.conf &
-    local pid=$!
-
+start_service()
+{
     # 随机取得端口
     get_port; 
     local port=$port_result
@@ -64,19 +63,54 @@ run() {
     $SSH -i $KEY_FILE -o UserKnownHostsFile="$KNOWN_HOSTS" \
         -g -NfR *:$port:*:22 ssh-reverse@115.29.171.150
 
-    messagebox 远程协助 "远程协助已开启,服务序号$port。
-请在结束协助后点击结束退出远程协助。" 1 结束 "killall ssh" &
+    json4sh.sh set $PWD/conf/data.json current_port value $port
+
+    local pass=`nvram_get 2860 Password`
+    json4sh.sh set $PWD/conf/data.json current_pass value $pass
+
+    appInfo.sh set_status "$PACKAGE_NAME" ISRUNNING
+}
+
+run() {
+    local status=`appInfo.sh get_status "$PACKAGE_NAME"`
+    local new_start=0
+
+    # 如果服务还没有开启,则开启服务
+    if [ "$status" == "NOTRUNNING" ] ; then        
+        new_start=1
+
+        # 添加转菊花效果 -- 阿耀 2014-10-29
+        updateconf $PWD/loading.conf -t State -v 0
+        loadingapp $PWD/loading.conf &
+
+        start_service
+    fi
+
+    # 显示当前服务端口
+    local port=`json4sh.sh get $PWD/conf/data.json current_port value`
+    local pass=`json4sh.sh get $PWD/conf/data.json current_pass value`
+    
+    messagebox 远程协助 "远程协助已开启,服务序号
+$port。
+当前极客密码:$pass
+协助结束后请退出。" 1 结束 "$PWD/init stop" &
 
     # 停止转菊花
-    updateconf $PWD/loading.conf -t State -v 2
+    if [ "$new_start" == "1" ] ; then        
+        updateconf $PWD/loading.conf -t State -v 2
+    fi
+    
 }
 
 start() {
-    echo "not implemented"
+    start_service
 }
 
 stop() {
-    echo "not implemented"
+    killall ssh
+    json4sh.sh set $PWD/conf/data.json current_port value 空
+    json4sh.sh set $PWD/conf/data.json current_pass value 空
+    appInfo.sh set_status "$PACKAGE_NAME" NOTRUNNING
 }
 
 config() {
@@ -90,6 +124,7 @@ config() {
 
     $INSTALL_BIN -d $LAUNCHER_CONFIG_DIR
     $INSTALL_BIN "$PROGRAM_NAME.conf" "$LAUNCHER_CONFIG_FILE"
+    $REMOVE "$PROGRAM_NAME.conf"
 }
 
 uninstall() {

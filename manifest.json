@@ -1,10 +1,11 @@
 {
         "package_id"      : "com.modouwifi.app-ssh-reverse",
-        "name"            : "远程协助",
+        "name"            : "app-ssh-reverse",
+        "display_name"    : "远程协助",
         "author"          : "魔豆开发团队-阿耀",
         "author_mail"     : "zhouyao@mochui.net",
         "homepage"        : "www.modouwifi.com",
-        "version"         : "0.2.3",
+        "version"         : "0.2.4",
         "release_date"    : "2014.10.24",
         "icon"            : "./res/icon.png",
         "location"        : "internal",
