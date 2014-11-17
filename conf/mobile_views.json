@@ -1,0 +1,16 @@
+{
+    "main_page" :
+    {
+        "id": "main_page",
+        "name": "远程协助",
+        "type": "main",
+        "data" :
+        {
+            "current_port":
+            {
+                "id" : "current_port",
+                "access" : "RO"
+            }
+        }
+    }
+}
