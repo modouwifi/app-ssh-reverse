@@ -9,6 +9,7 @@ TITLE="远程协助"
 PROGRAM_NAME="app-ssh-reverse"
 CUSTOM_BIN="/system/apps/tp/bin/custom"
 
+
 APPS_CONFIG_DIR="/data/conf"
 LAUNCHER_CONFIG_DIR="$APPS_CONFIG_DIR/launcher/conf.d"
 LAUNCHER_CONFIG_FILE="$LAUNCHER_CONFIG_DIR/$PROGRAM_NAME.conf"
@@ -19,9 +20,11 @@ PRESSED_ICON="./res/icon_pressed.png"
 INSTALL_BIN="/usr/bin/install"
 REMOVE="/bin/rm -f"
 
-KEY_FILE=$PWD/ali-ssh-reverse-id_rsa
-KNOWN_HOSTS=$PWD/known_hosts
+SERVER="118.144.72.156"
+KEY_FILE=$PWD/id_rsa
 SSH=$PWD/ssh
+USER="help"
+SSH_CONFIG="$PWD/ssh_config"
 
 usage() {
     echo "ERROR: action missing"
@@ -31,7 +34,7 @@ usage() {
 
 remote_exec()
 {
-    exec_result=`$SSH -i $KEY_FILE -o UserKnownHostsFile="$KNOWN_HOSTS" ssh-reverse@115.29.171.150 "$1"`    
+    exec_result=`$SSH -i $KEY_FILE -F $SSH_CONFIG $USER@$SERVER "$1"`    
 }
 
 get_port()
@@ -60,8 +63,7 @@ start_service()
     local port=$port_result
     
     echo "使用PORT:$port"
-    $SSH -i $KEY_FILE -o UserKnownHostsFile="$KNOWN_HOSTS" \
-        -g -NfR *:$port:*:22 ssh-reverse@115.29.171.150
+    $SSH -i $KEY_FILE -g -NfR *:$port:*:22 $USER@$SERVER
 
     json4sh.sh set $PWD/conf/data.json current_port value $port
 
