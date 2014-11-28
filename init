@@ -63,7 +63,7 @@ start_service()
     local port=$port_result
     
     echo "使用PORT:$port"
-    $SSH -i $KEY_FILE -g -NfR *:$port:*:22 $USER@$SERVER
+    $SSH -i $KEY_FILE -F $SSH_CONFIG -g -NfR *:$port:*:22 $USER@$SERVER
 
     json4sh.sh set $PWD/conf/data.json current_port value $port
 
