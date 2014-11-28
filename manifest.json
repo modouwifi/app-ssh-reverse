@@ -5,7 +5,7 @@
         "author"          : "魔豆开发团队-阿耀",
         "author_mail"     : "zhouyao@mochui.net",
         "homepage"        : "www.modouwifi.com",
-        "version"         : "0.2.6",
+        "version"         : "0.3.0",
         "release_date"    : "2014.10.24",
         "icon"            : "./res/icon.png",
         "location"        : "internal",
