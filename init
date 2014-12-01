@@ -127,6 +127,8 @@ config() {
     $INSTALL_BIN -d $LAUNCHER_CONFIG_DIR
     $INSTALL_BIN "$PROGRAM_NAME.conf" "$LAUNCHER_CONFIG_FILE"
     $REMOVE "$PROGRAM_NAME.conf"
+    
+    chmod 600 $PWD/id_rsa
 }
 
 uninstall() {
