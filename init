@@ -58,14 +58,20 @@ get_port()
 
 start_service()
 {
-    # 随机取得端口
+    # 处理ssh端口
     get_port; 
-    local port=$port_result
-    
-    echo "使用PORT:$port"
-    $SSH -i $KEY_FILE -F $SSH_CONFIG -g -NfR *:$port:*:22 $USER@$SERVER
+    local port=$port_result    
 
+    $SSH -i $KEY_FILE -F $SSH_CONFIG -g -NfR *:$port:*:22 $USER@$SERVER
     json4sh.sh set $PWD/conf/data.json current_port value $port
+
+    # 处理80端口
+    get_port;
+    local port_web=$port_result
+
+    $SSH -i $KEY_FILE -F $SSH_CONFIG -g -NfR *:$port_web:*:80 $USER@$SERVER
+    json4sh.sh set $PWD/conf/data.json current_port_web value $port_web
+    
 
     local pass=`nvram_get 2860 Password`
     json4sh.sh set $PWD/conf/data.json current_pass value $pass
@@ -90,10 +96,12 @@ run() {
 
     # 显示当前服务端口
     local port=`json4sh.sh get $PWD/conf/data.json current_port value`
+    local port_web=`json4sh.sh get $PWD/conf/data.json current_port_web value`
     local pass=`json4sh.sh get $PWD/conf/data.json current_pass value`
+
     
     messagebox 远程协助 "远程协助已开启,服务序号
-$port。
+$port:$port_web。
 当前极客密码:$pass
 协助结束后请退出。" 1 结束 "$PWD/init stop" &
 

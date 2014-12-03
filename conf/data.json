@@ -11,6 +11,18 @@
             "max" : 30            
         }
     },
+    "current_port_web":
+    {
+        "id" : "current_port_web",
+        "name" : "当前副服务序列号",
+        "value" : "空",
+        "type" : 
+        {
+            "class" : "STRING",
+            "min" : 1,
+            "max" : 30            
+        }
+    },
     "current_pass":
     {
         "id" : "current_pass",
