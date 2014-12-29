@@ -20,11 +20,22 @@ PRESSED_ICON="./res/icon_pressed.png"
 INSTALL_BIN="/usr/bin/install"
 REMOVE="/bin/rm -f"
 
-SERVER="118.144.72.156"
+SERVER="help.imoguyun.com"
 KEY_FILE=$PWD/id_rsa
-SSH=$PWD/ssh
+KEY_FILE_OP=$PWD/id_rsa_op
+SSH="$PWD/ssh"
+SSH_OP="/usr/bin/ssh"
 USER="help"
 SSH_CONFIG="$PWD/ssh_config"
+FLAG="-F $SSH_CONFIG"
+EXPERT_PASS=`nvram_get 2860 Password`
+
+if [ -f "/usr/bin/ssh" ] ; then
+    SSH=$SSH_OP
+    KEY_FILE=$KEY_FILE_OP
+    FLAG="-y"
+    EXPERT_PASS=`uci get system.account.Password`
+fi
 
 usage() {
     echo "ERROR: action missing"
@@ -34,7 +45,7 @@ usage() {
 
 remote_exec()
 {
-    exec_result=`$SSH -i $KEY_FILE -F $SSH_CONFIG $USER@$SERVER "$1"`    
+    exec_result=`$SSH -i $KEY_FILE $FLAG $USER@$SERVER "$1"`    
 }
 
 get_port()
@@ -62,19 +73,17 @@ start_service()
     get_port; 
     local port=$port_result    
 
-    $SSH -i $KEY_FILE -F $SSH_CONFIG -g -NfR *:$port:*:22 $USER@$SERVER
+    $SSH -i $KEY_FILE $FLAG -g -N -f -R *:$port:*:22 $USER@$SERVER
     json4sh.sh set $PWD/conf/data.json current_port value $port
 
     # 处理80端口
     get_port;
     local port_web=$port_result
 
-    $SSH -i $KEY_FILE -F $SSH_CONFIG -g -NfR *:$port_web:*:80 $USER@$SERVER
+    $SSH -i $KEY_FILE $FLAG -g -N -f -R *:$port_web:*:80 $USER@$SERVER
     json4sh.sh set $PWD/conf/data.json current_port_web value $port_web
     
-
-    local pass=`nvram_get 2860 Password`
-    json4sh.sh set $PWD/conf/data.json current_pass value $pass
+    json4sh.sh set $PWD/conf/data.json current_pass value $EXPERT_PASS
 
     appInfo.sh set_status "$PACKAGE_NAME" ISRUNNING
 }
@@ -137,6 +146,7 @@ config() {
     $REMOVE "$PROGRAM_NAME.conf"
     
     chmod 600 $PWD/id_rsa
+    chmod 600 $PWD/id_rsa_op
 }
 
 uninstall() {
